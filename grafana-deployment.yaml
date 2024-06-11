@@ -1,0 +1,43 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-deployment  # Name of the deployment, modify as necessary
+spec:
+  replicas: 1  # Number of pod replicas, adjust according to requirements
+  selector:
+    matchLabels:
+      app: grafana-app  # Label to select the pods, must match the labels in template.metadata.labels
+  template:
+    metadata:
+      labels:
+        app: grafana-app  # Label for the pod, must match the selector
+    spec:
+      containers:
+      - name: my-container  # Container name, modify as needed
+        image: grafana/grafana:latest
+        ports: 
+        - containerPort: 3000  # Port in the container that the application exposes, adjust as necessary
+        env:
+        - name: GF_SECURITY_ADMIN_USER
+          valueFrom:
+            secretKeyRef:
+              name: admin
+              key: admin
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: grafana-admin
+              key: admin-password
+        volumeMounts:
+        - name: grafana-data
+          mountPath: /var/lib/grafana
+        - name: grafana-provisioning
+          mountPath: /etc/grafana/provisioning
+      volumes:
+      - name: grafana-data
+        persistentVolumeClaim:
+          claimName: grafana-pvc
+      - name: grafana-provisioning
+        configMap:
+          name: grafana-provisioning
